@@ -57,7 +57,6 @@ public class  edwardPlsWork extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor backLeftDrive = null;
     private DcMotor backRightDrive = null;
-
     private DcMotor frontLeftDrive = null;
     private DcMotor frontRightDrive = null;
     private DcMotor Intakeextention = null;
@@ -422,7 +421,7 @@ public class  edwardPlsWork extends LinearOpMode {
             telemetry.addData("Nerf Constant: ", nerf);
             telemetry.addData("Intake Pressed", is_pressed_intake);
             telemetry.addData("JoyStickValue", gamepad2.right_stick_y);
-//            elemetry.addData("State of Button: ", is_pressed_Hinge);
+            telemetry.addData("State of Button: ", is_pressed_Hinge);
 
             telemetry.update();
 

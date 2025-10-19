@@ -32,7 +32,10 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -54,10 +57,29 @@ import com.qualcomm.robotcore.util.Range;
 //@Disabled
 public class CPplsCook extends LinearOpMode {
 
-    // Declare OpMode members.
+    // Gamepad 1
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftDrive = null;
-    private DcMotor rightDrive = null;
+    private DcMotor frontLeftDrive = null;
+    private DcMotor backLeftDrive = null;
+    private DcMotor frontRightDrive = null;
+    private DcMotor backRightDrive = null;
+    private boolean wheelBreak = false;
+
+//    Gamepad 2
+    private DcMotor intake = null;
+    private DcMotor intake2 = null;
+    private DcMotor shooter = null;
+    private Servo shooterHinge;
+    private boolean intakeActive = false;
+    private boolean shooterActive = false;
+    private boolean shooterUp = false;
+
+    private CRServo intakeToShooter;
+    private CRServo intakeToShooter2;
+
+
+
+
 
     @Override
     public void runOpMode() {
@@ -71,35 +93,67 @@ public class CPplsCook extends LinearOpMode {
             Forward/back = left stick y
             Strafe left/right = left stick x
             Turn in place = right stick x
-            Turn over time right stick y
 
         Wheel Lock
-            Button A Toggle
+           both bumbers
+
+        MIGHT HAPPEN
         Shooter positioning(Drive to correct place?)
             Button B
             Trigger hold down until in position
-    Gamepad 2
-        Intake
-            Left bumper
-        Shooter
-            Right bumper
-        Shooter Hinge
-            Left joystick down
-            Right joystick up
+           */
+        /*
+        Gamepad 2
+            Intake
+                Left bumper
+            Shooter
+                Right bumper
+            Shooter Hinge
+                Left joystick down
+                Right joystick up
 
          */
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
-        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
+        frontLeftDrive  = hardwareMap.get(DcMotor.class, "frontLeftMotor");
+        frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightMotor");
+        backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftMotor");
+        backRightDrive = hardwareMap.get(DcMotor.class, "backRightMotor");
 
-        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
-        // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
-        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightDrive.setDirection(DcMotor.Direction.FORWARD);
+        intake = hardwareMap.get(DcMotor.class, "Intake");
+        intake2 = hardwareMap.get(DcMotor.class, "Intake2");
+        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+
+        shooterHinge = hardwareMap.get(Servo.class, "shooterHinge");
+        intakeToShooter = hardwareMap.get(CRServo.class, "intakeToShooter");
+        intakeToShooter2 = hardwareMap.get(CRServo.class, "intakeToShooter2");
+
+
+        // Will need to be changed depends of wheels and motor setup
+        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+
+        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        double nerf = 0.75;
+
 
         // Wait for the game to start (driver presses START)
         waitForStart();
@@ -108,32 +162,115 @@ public class CPplsCook extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            // Setup a variable for each drive wheel to save power level for telemetry
-            double leftPower;
-            double rightPower;
+            // this controls speed
+            double Logdrive = -gamepad1.left_stick_y*nerf;
+            double LATdrive = -gamepad1.left_stick_x*nerf;
+            double Turndrive = -gamepad1.right_stick_x*0.60;
 
-            // Choose to drive using either Tank Mode, or POV Mode
-            // Comment out the method that's not used.  The default below is POV.
 
-            // POV Mode uses left stick to go forward, and right stick to turn.
-            // - This uses basic math to combine motions and is easier to drive straight.
-            double drive = -gamepad1.left_stick_y;
-            double turn  =  gamepad1.right_stick_x;
-            leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-            rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+            // this is for controller dead zones and inaccurate reading
+            if (Math.abs(Logdrive) < 0.1) Logdrive = 0;
 
-            // Tank Mode uses one stick to control each wheel.
-            // - This requires no math, but it is hard to drive forward slowly and keep straight.
-            // leftPower  = -gamepad1.left_stick_y ;
-            // rightPower = -gamepad1.right_stick_y ;
 
-            // Send calculated power to wheels
-            leftDrive.setPower(leftPower);
-            rightDrive.setPower(rightPower);
+
+//           slow mode
+            if(gamepad1.left_bumper) {
+                nerf = 0.4;
+            }
+            if(gamepad1.right_bumper) {
+                nerf = 0.75;
+            }
+
+//          Wheel Break
+            if(gamepad1.left_bumper && gamepad1.right_bumper && !wheelBreak) {
+                wheelBreak = true;
+
+            }
+            else if(gamepad1.left_bumper && gamepad1.right_bumper && wheelBreak) {
+                wheelBreak = false;
+
+            }
+
+            if (wheelBreak) {
+                telemetry.addData("WHEEL BRAKE STOP DRIVING NOW", "wheel break" + wheelBreak);
+
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                frontLeftDrive.setPower(0);
+                frontRightDrive.setPower(0);
+                backLeftDrive.setPower(0);
+                backRightDrive.setPower(0);
+            }
+            else {
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+
+                backLeftDrive.setPower(Logdrive+LATdrive-Turndrive);
+                backRightDrive.setPower(Logdrive-LATdrive+Turndrive);
+                frontLeftDrive.setPower(Logdrive-LATdrive-Turndrive);
+                frontRightDrive.setPower(Logdrive+LATdrive+Turndrive);
+            }
+
+            //intake and shooter controls
+            if(gamepad2.left_bumper && !intakeActive) {
+                intakeActive = true;
+            }
+            else if(gamepad2.left_bumper && intakeActive) {
+                intakeActive = false;
+            }
+
+            if(intakeActive){
+                intake.setPower(0.5);
+                intake2.setPower(0.5);
+                intakeToShooter.setPower(0.5);
+                intakeToShooter2.setPower(0.5);
+            }
+            else{
+                intake.setPower(0);
+                intake2.setPower(0);
+                intakeToShooter.setPower(0);
+                intakeToShooter2.setPower(0);
+            }
+
+
+
+            if(gamepad2.right_bumper && !shooterActive) {
+                shooter.setPower(0.5);
+                shooterActive = true;
+                intakeToShooter.setPower(0.5);
+                intakeToShooter2.setPower(0.5);
+            }
+            else if (gamepad2.right_bumper && shooterActive) {
+                shooter.setPower(0);
+                shooterActive = false;
+                intakeToShooter.setPower(0);
+                intakeToShooter2.setPower(0);
+            }
+
+
+
+            if(gamepad2.a && !shooterUp) {
+                shooterHinge.setPosition(1);
+            }
+            else if(gamepad2.a && shooterUp) {
+                shooterHinge.setPosition((0));
+            }
+
+
+
 
             // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
+//            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Motor", "Nerf: " + nerf); // motor speed
+//            telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
+            telemetry.addData("Intake", "intake active: " + intakeActive); // intake on / off
+            telemetry.addData("Shooter", "Shooter Active: " + shooterActive); // shooter on / off
+            telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());// shooter hinge position
             telemetry.update();
         }
     }
