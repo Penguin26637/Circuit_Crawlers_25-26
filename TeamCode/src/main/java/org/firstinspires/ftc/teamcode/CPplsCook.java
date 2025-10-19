@@ -64,6 +64,31 @@ public class CPplsCook extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        /*
+
+    Gamepad 1
+        Driving
+            Forward/back = left stick y
+            Strafe left/right = left stick x
+            Turn in place = right stick x
+            Turn over time right stick y
+
+        Wheel Lock
+            Button A Toggle
+        Shooter positioning(Drive to correct place?)
+            Button B
+            Trigger hold down until in position
+    Gamepad 2
+        Intake
+            Left bumper
+        Shooter
+            Right bumper
+        Shooter Hinge
+            Left joystick down
+            Right joystick up
+
+         */
+
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
