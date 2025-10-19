@@ -36,26 +36,26 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
+//import com.acmerobotics.roadrunner.geometry.Pose2d;
+//import com.acmerobotics.roadrunner.geometry.Vector2d;
 
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.control.PIDCoefficients;
-import com.acmerobotics.roadrunner.drive.DriveSignal;
-import com.acmerobotics.roadrunner.drive.MecanumDrive;
-import com.acmerobotics.roadrunner.followers.HolonomicPIDVAFollower;
-import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
-import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint;
-import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint;
-import com.acmerobotics.roadrunner.trajectory.constraints.MinVelocityConstraint;
-import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
-import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
-import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
+//import com.acmerobotics.roadrunner.trajectory.Trajectory;
+//import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+//import com.acmerobotics.dashboard.config.Config;
+//import com.acmerobotics.roadrunner.control.PIDCoefficients;
+//import com.acmerobotics.roadrunner.drive.DriveSignal;
+//import com.acmerobotics.roadrunner.drive.MecanumDrive;
+//import com.acmerobotics.roadrunner.followers.HolonomicPIDVAFollower;
+//import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
+//import com.acmerobotics.roadrunner.geometry.Pose2d;
+//import com.acmerobotics.roadrunner.trajectory.Trajectory;
+//import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
+//import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint;
+//import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint;
+//import com.acmerobotics.roadrunner.trajectory.constraints.MinVelocityConstraint;
+//import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint;
+//import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
+//import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -68,10 +68,10 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
-import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
+//import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
+//import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
+//import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
+//import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
 /*
  * This OpMode illustrates the concept of driving a path based on encoder counts.
@@ -164,46 +164,46 @@ public class edwardAutoTest1 extends LinearOpMode {
 
         waitForStart();
 
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        // We want to start the bot at x: 10, y: -8, heading: 90 degrees
-        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
-
-        drive.setPoseEstimate(startPose);
-
-        Trajectory traj1 = drive.trajectoryBuilder(startPose)
-                .splineTo(new Vector2d(3, 34), Math.toRadians(-45))
-                .build();
-        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
-                .forward(26.5)
-                .build();
-
-        Trajectory traj25 = drive.trajectoryBuilder(traj1.end())
-                .splineTo(new Vector2d(19.5, 22.8), Math.toRadians(0))
-                .build();
-
-        Trajectory traj3 = drive.trajectoryBuilder(traj25.end(),true)
-                .splineTo(new Vector2d(5,37.4), Math.toRadians(135))
-                .build();
-
-        Trajectory traj4 = drive.trajectoryBuilder(traj3.end())
-                .splineTo(new Vector2d(19.5,34.5), Math.toRadians(0))
-                  .build();
-
-        Trajectory traj5 = drive.trajectoryBuilder(traj4.end(),true)
-                .splineTo(new Vector2d(5,37.4), Math.toRadians(135))
-                .build();
-
-        Trajectory traj6 = drive.trajectoryBuilder(traj3.end(),true)
-                .splineTo(new Vector2d(50, -5), Math.toRadians(180))
-                .build();
-
-        Intakeextention.setPower(-0.4);
-        drive.followTrajectory(traj1);
-        outakeArm();
-        outakeDown();
-        drive.followTrajectory(traj25);
-        intakeToOutake();
-        drive.followTrajectory(traj3);
+//        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+//        // We want to start the bot at x: 10, y: -8, heading: 90 degrees
+//        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
+//
+//        drive.setPoseEstimate(startPose);
+//
+//        Trajectory traj1 = drive.trajectoryBuilder(startPose)
+//                .splineTo(new Vector2d(3, 34), Math.toRadians(-45))
+//                .build();
+//        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
+//                .forward(26.5)
+//                .build();
+//
+//        Trajectory traj25 = drive.trajectoryBuilder(traj1.end())
+//                .splineTo(new Vector2d(19.5, 22.8), Math.toRadians(0))
+//                .build();
+//
+//        Trajectory traj3 = drive.trajectoryBuilder(traj25.end(),true)
+//                .splineTo(new Vector2d(5,37.4), Math.toRadians(135))
+//                .build();
+//
+//        Trajectory traj4 = drive.trajectoryBuilder(traj3.end())
+//                .splineTo(new Vector2d(19.5,34.5), Math.toRadians(0))
+//                  .build();
+//
+//        Trajectory traj5 = drive.trajectoryBuilder(traj4.end(),true)
+//                .splineTo(new Vector2d(5,37.4), Math.toRadians(135))
+//                .build();
+//
+//        Trajectory traj6 = drive.trajectoryBuilder(traj3.end(),true)
+//                .splineTo(new Vector2d(50, -5), Math.toRadians(180))
+//                .build();
+//
+//        Intakeextention.setPower(-0.4);
+//        drive.followTrajectory(traj1);
+//        outakeArm();
+//        outakeDown();
+//        drive.followTrajectory(traj25);
+//        intakeToOutake();
+//        drive.followTrajectory(traj3);
         outakeArm();
         outakeDown();
         //drive.followTrajectory(traj4);
