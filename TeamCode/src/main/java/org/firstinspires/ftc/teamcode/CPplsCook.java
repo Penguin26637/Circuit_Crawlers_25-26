@@ -154,6 +154,7 @@ public class CPplsCook extends LinearOpMode {
 
         double nerf = 0.75;
 
+        telemetry.setMsTransmissionInterval(100);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
@@ -269,7 +270,7 @@ public class CPplsCook extends LinearOpMode {
             telemetry.addData("Motor", "Nerf: " + nerf); // motor speed
 //            telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
             telemetry.addData("Intake", "intake active: " + intakeActive); // intake on / off
-            telemetry.addData("Shooter", "Shooter Active: " + shooterActive); // shooter on / off
+            telemetry.addData(" Shooter", "Shooter Active: " + shooterActive); // shooter on / off
             telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());// shooter hinge position
             telemetry.update();
         }
