@@ -65,7 +65,7 @@ public class CPplsCook extends LinearOpMode {
     private DcMotor backRightDrive = null;
     private boolean wheelBreak = false;
 
-//    Gamepad 2
+    //    Gamepad 2
     private DcMotor intake = null;
     private DcMotor intake2 = null;
     private DcMotor shooter = null;
@@ -117,7 +117,7 @@ public class CPplsCook extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        frontLeftDrive  = hardwareMap.get(DcMotor.class, "frontl");
+        frontLeftDrive = hardwareMap.get(DcMotor.class, "frontl");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontr");
         backLeftDrive = hardwareMap.get(DcMotor.class, "backl");
         backRightDrive = hardwareMap.get(DcMotor.class, "backr");
@@ -170,33 +170,32 @@ public class CPplsCook extends LinearOpMode {
         while (opModeIsActive()) {
 
             // this controls speed
-            double Logdrive = -gamepad1.left_stick_y*nerf;
-            double LATdrive = -gamepad1.left_stick_x*nerf;
-            double Turndrive = -gamepad1.right_stick_x*0.60;
+            double Logdrive = -gamepad1.left_stick_y * nerf;
+            double LATdrive = -gamepad1.left_stick_x * nerf;
+            double Turndrive = -gamepad1.right_stick_x * 0.60;
 
 
             // this is for controller dead zones and inaccurate reading
 //            if (Math.abs(Logdrive) < 0.1) Logdrive = 0;
 
-            backLeftDrive.setPower(Logdrive+LATdrive-Turndrive);
-            backRightDrive.setPower(Logdrive-LATdrive+Turndrive);
-            frontLeftDrive.setPower(Logdrive-LATdrive-Turndrive);
-            frontRightDrive.setPower(Logdrive+LATdrive+Turndrive);
+            backLeftDrive.setPower(Logdrive + LATdrive - Turndrive);
+            backRightDrive.setPower(Logdrive - LATdrive + Turndrive);
+            frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);
+            frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
 
 //           slow mode
-            if(gamepad1.left_bumper) {
+            if (gamepad1.left_bumper) {
                 nerf = 0.1;
             }
-            if(gamepad1.right_bumper) {
+            if (gamepad1.right_bumper) {
                 nerf = 0.9;
             }
 
 //          Wheel Break
-            if(gamepad1.left_bumper && gamepad1.right_bumper && !wheelBreak) {
+            if (gamepad1.left_bumper && gamepad1.right_bumper && !wheelBreak) {
                 wheelBreak = true;
 
-            }
-            else if(gamepad1.left_bumper && gamepad1.right_bumper && wheelBreak) {
+            } else if (gamepad1.left_bumper && gamepad1.right_bumper && wheelBreak) {
                 wheelBreak = false;
 
             }
@@ -226,24 +225,21 @@ public class CPplsCook extends LinearOpMode {
                 frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
 
-
             }
 
             //intake and shooter controls
-            if(gamepad2.left_bumper && !intakeActive) {
+            if (gamepad2.left_bumper && !intakeActive) {
                 intakeActive = true;
-            }
-            else if(gamepad2.left_bumper && intakeActive) {
+            } else if (gamepad2.left_bumper && intakeActive) {
                 intakeActive = false;
             }
 
-            if(intakeActive){
+            if (intakeActive) {
                 intake.setPower(intake_speed);
                 intake2.setPower(intake_speed);
 //                intakeToShooter.setPower(0.5);
 //                intakeToShooter2.setPower(0.5);
-            }
-            else{
+            } else {
                 intake.setPower(0);
                 intake2.setPower(0);
 //                intakeToShooter.setPower(0);
@@ -251,14 +247,12 @@ public class CPplsCook extends LinearOpMode {
             }
 
 
-
-            if(gamepad2.right_bumper && !shooterActive) {
+            if (gamepad2.right_bumper && !shooterActive) {
                 shooter.setPower(0.5);
                 shooterActive = true;
                 intakeToShooter.setPower(0.5);
                 intakeToShooter2.setPower(0.5);
-            }
-            else if (gamepad2.right_bumper && shooterActive) {
+            } else if (gamepad2.right_bumper && shooterActive) {
                 shooter.setPower(0);
                 shooterActive = false;
                 intakeToShooter.setPower(0);
@@ -266,15 +260,11 @@ public class CPplsCook extends LinearOpMode {
             }
 
 
-
-            if(gamepad2.a && !shooterUp) {
+            if (gamepad2.a && !shooterUp) {
                 shooterHinge.setPosition(1);
-            }
-            else if(gamepad2.a && shooterUp) {
+            } else if (gamepad2.a && shooterUp) {
                 shooterHinge.setPosition((0));
             }
-
-
 
 
 //             Show the elapsed game time and wheel power.
@@ -284,11 +274,11 @@ public class CPplsCook extends LinearOpMode {
             telemetry.addData("Intake", "intake active: " + intakeActive); // intake on / off
             telemetry.addData(" Shooter", "Shooter Active: " + shooterActive); // shooter on / off
             telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());// shooter hinge position
-            telemetry.log().add("Shooter toggled ON",  shooterActive);
+            telemetry.log().add("Shooter toggled ON", shooterActive);
             telemetry.addData("status", "running");
 
             telemetry.update();
             sleep(20);
         }
     }
-
+}
