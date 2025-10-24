@@ -78,7 +78,7 @@ public class CPplsCook extends LinearOpMode {
     private CRServo intakeToShooter2;
 
 
-
+    private double intake_speed = 0.5;
 
 
     @Override
@@ -86,6 +86,33 @@ public class CPplsCook extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        /*
+
+    Gamepad 1
+        Driving
+            Forward/back = left stick y
+            Strafe left/right = left stick x
+            Turn in place = right stick x
+
+        Wheel Lock
+           both bumbers
+
+        MIGHT HAPPEN
+        Shooter positioning(Drive to correct place?)
+            Button B
+            Trigger hold down until in position
+           */
+        /*
+        Gamepad 2
+            Intake
+                Left bumper
+            Shooter
+                Right bumper
+            Shooter Hinge
+                Left joystick down
+                Right joystick up
+
+         */
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -115,21 +142,28 @@ public class CPplsCook extends LinearOpMode {
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//
+//        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         double nerf = 0.75;
 
+        telemetry.setMsTransmissionInterval(100);
 
         // Wait for the game to start (driver presses START)
+
+        telemetry.addLine("Waiting for start...");
+        telemetry.update();
         waitForStart();
+        telemetry.addLine("Started!");
+        telemetry.update();
+
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
@@ -150,10 +184,11 @@ public class CPplsCook extends LinearOpMode {
             frontRightDrive.setPower(Logdrive+LATdrive+Turndrive);
 
 //           slow mode
-                 nerf = 0.4;
+            if(gamepad1.left_bumper) {
+                nerf = 0.1;
             }
             if(gamepad1.right_bumper) {
-                nerf = 0.75;
+                nerf = 0.9;
             }
 
 //          Wheel Break
@@ -203,16 +238,16 @@ public class CPplsCook extends LinearOpMode {
             }
 
             if(intakeActive){
-                intake.setPower(0.5);
-                intake2.setPower(0.5);
-                intakeToShooter.setPower(0.5);
-                intakeToShooter2.setPower(0.5);
+                intake.setPower(intake_speed);
+                intake2.setPower(intake_speed);
+//                intakeToShooter.setPower(0.5);
+//                intakeToShooter2.setPower(0.5);
             }
             else{
                 intake.setPower(0);
                 intake2.setPower(0);
-                intakeToShooter.setPower(0);
-                intakeToShooter2.setPower(0);
+//                intakeToShooter.setPower(0);
+//                intakeToShooter2.setPower(0);
             }
 
 
@@ -242,20 +277,18 @@ public class CPplsCook extends LinearOpMode {
 
 
 
-            // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Motor", "Nerf: " + nerf); // motor speed
-        telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
-        telemetry.addData("Intake", "intake active: " + intakeActive); // intake on / off
-        telemetry.addData("Shooter", "Shooter Active: " + shooterActive); // shooter on / off
-        telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());// shooter hinge position
+//             Show the elapsed game time and wheel power.
+            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Motor", "Nerf: " + nerf); // motor speed
+//            telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
+            telemetry.addData("Intake", "intake active: " + intakeActive); // intake on / off
+            telemetry.addData(" Shooter", "Shooter Active: " + shooterActive); // shooter on / off
+            telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());// shooter hinge position
+            telemetry.log().add("Shooter toggled ON",  shooterActive);
+            telemetry.addData("status", "running");
 
-        telemetry.addData("Drive Encoder", "frontLeftDrive", frontLeftDrive.getCurrentPosition());
-        telemetry.addData("Drive Encoder", "frontRightDrive", frontRightDrive.getCurrentPosition());
-        telemetry.addData("Drive Encoder", "backLeftDrive", backLeftDrive.getCurrentPosition());
-        telemetry.addData("Drive Encoder", "backRightDrive", backRightDrive.getCurrentPosition());
-
-        telemetry.update();
+            telemetry.update();
+            sleep(20);
         }
     }
 
