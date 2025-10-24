@@ -78,7 +78,7 @@ public class CPplsCook extends LinearOpMode {
     private CRServo intakeToShooter2;
 
 
-    private double intake_speed = 0.5;
+    private double intake_speed = 0.1;
 
 
     @Override
@@ -152,7 +152,7 @@ public class CPplsCook extends LinearOpMode {
 //        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        double nerf = 0.75;
+        double nerf = 0.1;
 
         telemetry.setMsTransmissionInterval(100);
 
@@ -188,15 +188,12 @@ public class CPplsCook extends LinearOpMode {
                 nerf = 0.1;
             }
             if (gamepad1.right_bumper) {
-                nerf = 0.9;
+                nerf = 0.1;
             }
 
 //          Wheel Break
             if (gamepad1.left_bumper && gamepad1.right_bumper && !wheelBreak) {
                 wheelBreak = true;
-
-            } else if (gamepad1.left_bumper && gamepad1.right_bumper && wheelBreak) {
-                wheelBreak = false;
 
             }
 
@@ -208,24 +205,38 @@ public class CPplsCook extends LinearOpMode {
                 frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-                frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//
+//                frontLeftDrive.setPower(0);
+//                frontRightDrive.setPower(0);
+//                backLeftDrive.setPower(0);
+//                backRightDrive.setPower(0);
 
-                frontLeftDrive.setPower(0);
-                frontRightDrive.setPower(0);
-                backLeftDrive.setPower(0);
-                backRightDrive.setPower(0);
+                telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
+
+
+
+                if (gamepad1.left_bumper && gamepad1.right_bumper && wheelBreak) {
+                    wheelBreak = false;
+                    telemetry.addData("Stopped", "wheelBreak" + wheelBreak);
+
+                }
             }
-            if (!wheelBreak) {
-                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+            backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+            backLeftDrive.setPower(Logdrive + LATdrive - Turndrive);
+            backRightDrive.setPower(Logdrive - LATdrive + Turndrive);
+            frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);
+            frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
 
 
-            }
 
             //intake and shooter controls
             if (gamepad2.left_bumper && !intakeActive) {
@@ -270,15 +281,16 @@ public class CPplsCook extends LinearOpMode {
 //             Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Motor", "Nerf: " + nerf); // motor speed
-//            telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
+            telemetry.addData("End Game", "Wheel Break: " + wheelBreak);
             telemetry.addData("Intake", "intake active: " + intakeActive); // intake on / off
             telemetry.addData(" Shooter", "Shooter Active: " + shooterActive); // shooter on / off
             telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());// shooter hinge position
-            telemetry.log().add("Shooter toggled ON", shooterActive);
+//            telemetry.log().add("Shooter toggled ON", shooterActive);
             telemetry.addData("status", "running");
 
             telemetry.update();
             sleep(20);
+
         }
     }
 }
