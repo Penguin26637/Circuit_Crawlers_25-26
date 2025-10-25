@@ -70,11 +70,6 @@ public final class TuningOpModes {
 
     private static PinpointView makePinpointView(PinpointLocalizer pl) {
         return new PinpointView() {
-            @Override
-            public float getHeadingVelocity() {
-                return 0;
-            }
-
             GoBildaPinpointDriver.EncoderDirection parDirection = pl.initialParDirection;
             GoBildaPinpointDriver.EncoderDirection perpDirection = pl.initialPerpDirection;
 
@@ -93,7 +88,7 @@ public final class TuningOpModes {
                 return pl.driver.getEncoderY();
             }
 
-//            @Override
+            @Override
             public float getHeadingVelocity(UnnormalizedAngleUnit unit) {
                 return (float) pl.driver.getHeadingVelocity(unit);
             }
@@ -301,9 +296,9 @@ public final class TuningOpModes {
         manager.register(metaForClass(MecanumMotorDirectionDebugger.class), new MecanumMotorDirectionDebugger(dvf));
         manager.register(metaForClass(DeadWheelDirectionDebugger.class), new DeadWheelDirectionDebugger(dvf));
 
-        manager.register(metaForClass(org.firstinspires.ftc.teamcode.tuning.ManualFeedbackTuner.class), org.firstinspires.ftc.teamcode.tuning.ManualFeedbackTuner.class);
-        manager.register(metaForClass(org.firstinspires.ftc.teamcode.tuning.SplineTest.class), org.firstinspires.ftc.teamcode.tuning.SplineTest.class);
-        manager.register(metaForClass(org.firstinspires.ftc.teamcode.tuning.LocalizationTest.class), org.firstinspires.ftc.teamcode.tuning.LocalizationTest.class);
+        manager.register(metaForClass(ManualFeedbackTuner.class), ManualFeedbackTuner.class);
+        manager.register(metaForClass(SplineTest.class), SplineTest.class);
+        manager.register(metaForClass(LocalizationTest.class), LocalizationTest.class);
 
         manager.register(metaForClass(OTOSAngularScalarTuner.class), new OTOSAngularScalarTuner(dvf));
         manager.register(metaForClass(OTOSLinearScalarTuner.class), new OTOSLinearScalarTuner(dvf));
@@ -317,7 +312,7 @@ public final class TuningOpModes {
                     LateralRampLogger.class,
                     ManualFeedforwardTuner.class,
                     MecanumMotorDirectionDebugger.class,
-                    org.firstinspires.ftc.teamcode.tuning.ManualFeedbackTuner.class
+                    ManualFeedbackTuner.class
             )) {
                 configRoot.putVariable(c.getSimpleName(), ReflectionConfig.createVariableFromClass(c));
             }
