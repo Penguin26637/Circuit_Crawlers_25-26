@@ -197,7 +197,7 @@ public class CPplsCook extends LinearOpMode {
 
             }
 
-            while (wheelBreak) {
+            if (wheelBreak) {
                 telemetry.addData("WHEEL BRAKE STOP DRIVING NOW", "wheel break" + wheelBreak);
 
                 backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

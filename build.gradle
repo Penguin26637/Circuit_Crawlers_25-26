@@ -15,8 +15,8 @@ buildscript {
     }
 }
 
-// This is now required because aapt2 has to be downloaded from the
-// google() repository beginning with version 3.2 of the Android Gradle Plugin
+// Required because aapt2 has to be downloaded from the google() repository
+// beginning with version 3.2 of the Android Gradle Plugin
 allprojects {
     repositories {
         mavenCentral()
@@ -24,6 +24,19 @@ allprojects {
     }
 }
 
-repositories {
-    mavenCentral()
+// ✅ Force Gradle to use Java 17 for all Java compile tasks
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.release = 17
+    }
 }
+
+// ✅ Ensure Java 17 compatibility globally
+tasks.withType(JavaCompile).configureEach {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// (Optional) if Gradle needs to know your local JDK path explicitly,
+// you can also create or edit gradle.properties (in project root) and add:
+// org.gradle.java.home=C:\\Program Files\\Java\\jdk-17
