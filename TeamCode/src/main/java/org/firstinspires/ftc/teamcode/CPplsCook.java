@@ -118,15 +118,6 @@ public class CPplsCook extends LinearOpMode {
             if (gamepad1.left_stick_button && gamepad1.right_stick_button && !wheelBreak) {
                 wheelBreak = true;
                 sleep(200);
-                frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-                wheelBreakTargetFL = frontLeftDrive.getCurrentPosition();
-                wheelBreakTargetFR = frontRightDrive.getCurrentPosition();
-                wheelBreakTargetBL = backLeftDrive.getCurrentPosition();
-                wheelBreakTargetBR = backRightDrive.getCurrentPosition();
 
 //                frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //                frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -138,6 +129,11 @@ public class CPplsCook extends LinearOpMode {
                 backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+                frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
                 frontLeftDrive.setTargetPosition(0);
                 frontRightDrive.setTargetPosition(0);
                 backLeftDrive.setTargetPosition(0);
@@ -147,6 +143,12 @@ public class CPplsCook extends LinearOpMode {
                 frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                wheelBreakTargetFL = frontLeftDrive.getCurrentPosition();
+                wheelBreakTargetFR = frontRightDrive.getCurrentPosition();
+                wheelBreakTargetBL = backLeftDrive.getCurrentPosition();
+                wheelBreakTargetBR = backRightDrive.getCurrentPosition();
+
             } else if (gamepad1.left_stick_button && gamepad1.right_stick_button && wheelBreak){
                 wheelBreak = false;
                 sleep(200);
@@ -238,14 +240,16 @@ public class CPplsCook extends LinearOpMode {
             }
 
             // --- Intake ---
-            if (gamepad2.left_bumper && intakeActive) {
+            if (gamepad2.left_bumper && !intakeActive) {
                 sleep(200);
                 intake.setPower(intake_speed);
                 intake2.setPower(intake_speed);
-            } else if (gamepad2.left_bumper && !intakeActive) {
+                intakeActive = true;
+            } else if (gamepad2.left_bumper && intakeActive) {
                 sleep(200);
                 intake.setPower(0);
                 intake2.setPower(0);
+                intakeActive = false;
             }
 
 
@@ -294,6 +298,7 @@ public class CPplsCook extends LinearOpMode {
             packet.put("Back Right Encoder", backRightDrive.getCurrentPosition());
             packet.put("Nerf Speed", nerf);
             packet.put("Slow Mode", slow_mode);
+            packet.put("Wireless", "True");
 
 
             dashboard.sendTelemetryPacket(packet);
@@ -310,6 +315,7 @@ public class CPplsCook extends LinearOpMode {
             telemetry.addData("Back Right Encoder", backRightDrive.getCurrentPosition());
             telemetry.addData("Nerf Speed", nerf);
             telemetry.addData("Slow Mode",  slow_mode);
+            telemetry.addData("Wireless", "True");
 
 
         }
