@@ -100,7 +100,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  */
 
 @Autonomous(name="edwardAutoRun", group="Robot")
-//@Disabled
+@Disabled
 public class edwardAutoTest1 extends LinearOpMode {
     private Servo leftClawOutake;
     private Servo intakeHinge;
