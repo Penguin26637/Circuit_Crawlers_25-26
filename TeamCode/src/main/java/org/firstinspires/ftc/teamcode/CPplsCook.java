@@ -233,7 +233,7 @@ public class CPplsCook extends LinearOpMode {
 
                 backLeftDrive.setPower(Logdrive + LATdrive - Turndrive);
                 backRightDrive.setPower(Logdrive - LATdrive + Turndrive);
-                frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);
+                frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);adb disconnect
                 frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
             }
 
