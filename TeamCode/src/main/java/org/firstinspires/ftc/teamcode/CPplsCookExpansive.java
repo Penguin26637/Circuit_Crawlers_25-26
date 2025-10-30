@@ -161,16 +161,20 @@ public class CPplsCookExpansive extends LinearOpMode {
         telemetry.update();
         waitForStart();
         runtime.reset();
+        double nerf = 0.5;
 
         while (opModeIsActive()) {
             // --- Update odometry ---
             updateOdometry();
 
             // --- Driving control ---
-            double nerf = 0.1;
+
+
+
+
             double Logdrive = -gamepad1.left_stick_y * nerf;
             double LATdrive = -gamepad1.left_stick_x * nerf;
-            double Turndrive = -gamepad1.right_stick_x * 0.6;
+            double Turndrive = -gamepad1.right_stick_x * nerf;
 
             // Apply mecanum drive
             double flPower = Logdrive + LATdrive + Turndrive;
@@ -304,6 +308,11 @@ public class CPplsCookExpansive extends LinearOpMode {
             telemetry.addData("Nerf Speed", nerf);
             telemetry.addData("Slow Mode", slow_mode);
             telemetry.addData("Wireless", "True");
+            telemetry.addData("Motor Power", "Front Left" + frontLeftDrive.getPower());
+            telemetry.addData("Motor Power", "Front Right" + frontRightDrive.getPower());
+            telemetry.addData("Motor Power", "Back Left" + backLeftDrive.getPower());
+            telemetry.addData("Motor Power", "Back Right" + backRightDrive.getPower());
+
             telemetry.update();
 
             sleep(20);

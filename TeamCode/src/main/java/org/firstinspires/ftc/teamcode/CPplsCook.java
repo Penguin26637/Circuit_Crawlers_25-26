@@ -51,7 +51,7 @@ public class CPplsCook extends LinearOpMode {
     // Continuous rotation servos
 
     // Speeds
-    public static double intake_speed = 0.1;
+    public static double intake_speed = 0.5;
     public static double shooter_power = 0.5;
     public static double intakeToShooter_power = 0.5;
 
@@ -91,7 +91,8 @@ public class CPplsCook extends LinearOpMode {
         backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        double nerf = 0.1;
+        double nerf = 0.5;
+
 
         telemetry.setMsTransmissionInterval(100);
         FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -109,7 +110,7 @@ public class CPplsCook extends LinearOpMode {
             // --- Driving control ---
             double Logdrive = -gamepad1.left_stick_y * nerf;
             double LATdrive = -gamepad1.left_stick_x * nerf;
-            double Turndrive = -gamepad1.right_stick_x * 0.60;
+            double Turndrive = -gamepad1.right_stick_x * nerf;
 
             // Slow mode
 
@@ -222,7 +223,8 @@ public class CPplsCook extends LinearOpMode {
 
                 telemetry.addData("WHEEL BRAKE ACTIVE", "True");
 
-            } else if (!wheelBreak){
+            }
+            else if (!wheelBreak){
                 frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -245,7 +247,8 @@ public class CPplsCook extends LinearOpMode {
                 intake.setPower(intake_speed);
                 intake2.setPower(intake_speed);
                 intakeActive = true;
-            } else if (gamepad2.left_bumper && intakeActive) {
+            }
+            else if (gamepad2.left_bumper && intakeActive) {
                 sleep(200);
                 intake.setPower(0);
                 intake2.setPower(0);
@@ -316,6 +319,7 @@ public class CPplsCook extends LinearOpMode {
             telemetry.addData("Nerf Speed", nerf);
             telemetry.addData("Slow Mode",  slow_mode);
             telemetry.addData("Wireless", "True");
+            telemetry.addData("Front Left", "Power" + frontLeftDrive.getPower());
 
 
         }
