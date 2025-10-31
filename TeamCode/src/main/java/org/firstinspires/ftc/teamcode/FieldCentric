@@ -16,7 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 @TeleOp(name = "FieldCentricMecanumDrive", group = "Linear OpMode")
 public class FieldCentricMecanumDrive extends LinearOpMode {
 
-    // Define motors
+    // Define motors                                
     private DcMotor frontLeftMotor = null;
     private DcMotor backLeftMotor = null;
     private DcMotor frontRightMotor = null;
@@ -27,10 +27,10 @@ public class FieldCentricMecanumDrive extends LinearOpMode {
     public void runOpMode() {
 
         // Initialize hardware
-        frontLeftMotor = hardwareMap.get(DcMotor.class, "front_left_motor");
-        backLeftMotor = hardwareMap.get(DcMotor.class, "back_left_motor");
-        frontRightMotor = hardwareMap.get(DcMotor.class, "front_right_motor");
-        backRightMotor = hardwareMap.get(DcMotor.class, "back_right_motor");
+        frontLeftMotor = hardwareMap.get(DcMotor.class, "frontl");
+        frontRightMotor = hardwareMap.get(DcMotor.class, "frontr");
+        backLeftMotor = hardwareMap.get(DcMotor.class, "backl");
+        backRightMotor = hardwareMap.get(DcMotor.class, "backr");
 
         // Reverse the right motors (or left, depending on robot build)
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
