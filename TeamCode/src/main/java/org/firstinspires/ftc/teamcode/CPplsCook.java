@@ -44,6 +44,8 @@ public class CPplsCook extends LinearOpMode {
     public static boolean intakeActive = false;
     public static boolean shooterActive = false;
     public static boolean shooterUp = false;
+    public static boolean robot_centric = false;
+    public static boolean field_centric = false;
     public static double kP = 0.01;      // Proportional control constant
     public static double maxPower = 0.2; // Maximum motor power (range: 0–1)
     public static int maxError = 100;    // Maximum allowable encoder error
@@ -224,7 +226,7 @@ public class CPplsCook extends LinearOpMode {
                 telemetry.addData("WHEEL BRAKE ACTIVE", "True");
 
             }
-            else if (!wheelBreak){
+            else if (!wheelBreak && robot_centric){
                 frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -240,6 +242,7 @@ public class CPplsCook extends LinearOpMode {
                 frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);
                 frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
             }
+//            else if (!wheelBreak && field_centric)
 
             // --- Intake ---
             if (gamepad2.left_bumper && !intakeActive) {

@@ -3,13 +3,18 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.dashboard.canvas.Canvas;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.acmerobotics.dashboard.canvas.Canvas;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp(name="CPplsCookExpansive", group="Linear OpMode")
 @Config
@@ -40,19 +45,33 @@ public class CPplsCookExpansive extends LinearOpMode {
 
     // --- Odometry constants ---
     public static double TICKS_PER_INCH = 1377; // REV Odometry Pod 48mm wheel
-    public static double TRACK_WIDTH = 12;      // distance between left/right wheels (inches)
-    public static double BACK_WHEEL_OFFSET = 7; // distance from center (inches)
+    public static double TRACK_WIDTH = 13.5;    // distance between left/right wheels (inches)
+    public static double BACK_WHEEL_OFFSET = 8; // distance from center (inches)
 
     private double xPos = 0, yPos = 0, heading = 0;
     private int prevLeft = 0, prevRight = 0, prevBack = 0;
 
     // --- Runtime ---
-    private ElapsedTime runtime = new ElapsedTime();
+    private final ElapsedTime runtime = new ElapsedTime();
 
     // --- Dashboard ---
     private FtcDashboard dashboard;
 
     public static boolean slow_mode = false;
+    public static boolean robot_centric = true;
+    public static boolean field_centric = false;
+    public static double kP = 0.01;      // Proportional control constant
+    public static double maxPower = 0.2; // Maximum motor power (range: 0–1)
+    public static int maxError = 100;
+
+    private double getBatteryVoltage() {
+        double result = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) result = Math.min(result, voltage);
+        }
+        return result;
+    }
 
     private void updateOdometry() {
         // --- Read encoder values ---
@@ -107,31 +126,25 @@ public class CPplsCookExpansive extends LinearOpMode {
         intakeToShooter2 = hardwareMap.get(CRServo.class, "its2");
 
         // --- Odometry encoder setup ---
-        // Try reading before any mode changes
         telemetry.addData("Before Reset - Left", intake.getCurrentPosition());
         telemetry.addData("Before Reset - Right", intake2.getCurrentPosition());
         telemetry.addData("Before Reset - Back", shooter.getCurrentPosition());
         telemetry.update();
         sleep(1000);
 
-        // Reset encoders
         intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         intake2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        sleep(100);
 
-        sleep(100); // Give time for reset
-
-        // CRITICAL: Set to RUN_WITHOUT_ENCODER to read raw encoder values
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // Set to zero power (we're only reading encoders, not running motors)
         intake.setPower(0);
         intake2.setPower(0);
         shooter.setPower(0);
 
-        // Initialize previous positions after reset
         prevLeft = intake.getCurrentPosition();
         prevRight = intake2.getCurrentPosition();
         prevBack = shooter.getCurrentPosition();
@@ -139,17 +152,14 @@ public class CPplsCookExpansive extends LinearOpMode {
         telemetry.addData("After Reset - Left", prevLeft);
         telemetry.addData("After Reset - Right", prevRight);
         telemetry.addData("After Reset - Back", prevBack);
-        telemetry.addData("Left Direction", intake.getDirection());
-        telemetry.addData("Right Direction", intake2.getDirection());
-        telemetry.addData("Back Direction", shooter.getDirection());
         telemetry.update();
         sleep(2000);
 
         // --- Motor directions ---
-        frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -161,161 +171,246 @@ public class CPplsCookExpansive extends LinearOpMode {
         telemetry.update();
         waitForStart();
         runtime.reset();
+
         double nerf = 0.5;
 
+        // Retrieve the IMU from the hardware map
+        IMU imu = hardwareMap.get(IMU.class, "imu");
+        // Adjust the orientation parameters to match your robot
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
+        imu.initialize(parameters);
+
+
         while (opModeIsActive()) {
-            // --- Update odometry ---
             updateOdometry();
-
-            // --- Driving control ---
-
-
-
+            double batteryVoltage = getBatteryVoltage();
 
             double Logdrive = -gamepad1.left_stick_y * nerf;
             double LATdrive = -gamepad1.left_stick_x * nerf;
             double Turndrive = -gamepad1.right_stick_x * nerf;
 
-            // Apply mecanum drive
-            double flPower = Logdrive + LATdrive + Turndrive;
-            double frPower = Logdrive - LATdrive - Turndrive;
-            double blPower = Logdrive - LATdrive + Turndrive;
-            double brPower = Logdrive + LATdrive - Turndrive;
-
-            frontLeftDrive.setPower(flPower);
-            frontRightDrive.setPower(frPower);
-            backLeftDrive.setPower(blPower);
-            backRightDrive.setPower(brPower);
-
-            if (gamepad2.left_bumper && !intakeActive) {
-                sleep(200);
-                intake.setPower(intake_speed);
-                intake2.setPower(intake_speed);
-
-                telemetry.addData("intake 2", "power" + intake2.getPower());
-                intakeActive = true;
-            } else if (gamepad2.left_bumper && intakeActive) {
-                sleep(200);
-                intake.setPower(0);
-                intake2.setPower(0);
-                intakeActive = false;
+            if (gamepad1.x && robot_centric) {
+                robot_centric = false;
+                field_centric = true;
+                sleep(20);
+            } else if (gamepad1.x && field_centric) {
+                field_centric = false;
+                robot_centric = true;
+                sleep(20);
             }
 
-            if (gamepad2.right_bumper) {
+
+            // --- Wheel brake toggle ---
+            if (gamepad1.left_stick_button && gamepad1.right_stick_button && !wheelBreak) {
+                wheelBreak = true;
                 sleep(200);
-                shooterActive = !shooterActive;
-                shooter.setPower(shooterActive ? shooter_power : 0);
-                intakeToShooter.setPower(shooterActive ? intakeToShooter_power : 0);
-                intakeToShooter2.setPower(shooterActive ? intakeToShooter_power : 0);
+
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+                frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                frontLeftDrive.setTargetPosition(0);
+                frontRightDrive.setTargetPosition(0);
+                backLeftDrive.setTargetPosition(0);
+                backRightDrive.setTargetPosition(0);
+
+                frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                wheelBreakTargetFL = frontLeftDrive.getCurrentPosition();
+                wheelBreakTargetFR = frontRightDrive.getCurrentPosition();
+                wheelBreakTargetBL = backLeftDrive.getCurrentPosition();
+                wheelBreakTargetBR = backRightDrive.getCurrentPosition();
+
+            } else if (gamepad1.left_stick_button && gamepad1.right_stick_button && wheelBreak) {
+                wheelBreak = false;
+                sleep(200);
             }
 
-            // --- Shooter hinge ---
-            if (gamepad2.a) {
-                sleep(200);
-                shooterUp = !shooterUp;
-                shooterHinge.setPosition(shooterUp ? 1 : 0);
+
+
+
+            // --- Wheel brake control ---
+            if (wheelBreak) {
+                applyWheelBrake(frontLeftDrive, wheelBreakTargetFL);
+                applyWheelBrake(frontRightDrive, wheelBreakTargetFR);
+                applyWheelBrake(backLeftDrive, wheelBreakTargetBL);
+                applyWheelBrake(backRightDrive, wheelBreakTargetBR);
+                telemetry.addData("WHEEL BRAKE ACTIVE", "True");
+            } else if (!wheelBreak && robot_centric) {
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+                frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                backLeftDrive.setPower(Logdrive + LATdrive - Turndrive);
+                backRightDrive.setPower(Logdrive - LATdrive + Turndrive);
+                frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);
+                frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
             }
 
-            if (gamepad1.right_bumper && !slow_mode) {
-                sleep(200);
-                nerf = 0.1;
-                slow_mode = true;
+            else if (!wheelBreak && field_centric) {
+                double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+                double x = gamepad1.left_stick_x;
+                double rx = gamepad1.right_stick_x;
+
+                // This button choice was made so that it is hard to hit on accident,
+                // it can be freely changed based on preference.
+                // The equivalent button is start on Xbox-style controllers.
+                if (gamepad1.start) {
+                    imu.resetYaw();
+                }
+
+                double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+                // Rotate the movement direction counter to the bot's rotation
+                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+
+                rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+                // Denominator is the largest motor power (absolute value) or 1
+                // This ensures all the powers maintain the same ratio,
+                // but only if at least one is out of the range [-1, 1]
+                double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+                double frontLeftPower = (rotY + rotX + rx) / denominator;
+                double backLeftPower = (rotY - rotX + rx) / denominator;
+                double frontRightPower = (rotY - rotX - rx) / denominator;
+                double backRightPower = (rotY + rotX - rx) / denominator;
+
+                frontLeftDrive.setPower(frontLeftPower);
+                backLeftDrive.setPower(backLeftPower);
+                frontRightDrive.setPower(frontRightPower);
+                backRightDrive.setPower(backRightPower);
             }
-            else if(gamepad1.right_bumper && slow_mode) {
-                sleep(200);
-                nerf = 0.5;
-                slow_mode = false;
-            }
+
+            // --- Gamepad 2 controls ---
+            handleIntake();
+            handleShooter();
+            handleShooterHinge();
 
             // --- Dashboard telemetry ---
-            TelemetryPacket packet = new TelemetryPacket();
-            Canvas canvas = packet.fieldOverlay();
-
-            // FTC Field is 144" x 144" (12 ft x 12 ft)
-            // Dashboard field overlay: -72 to +72 inches from center
-
-            // Always draw a reference grid to see if canvas is working
-            canvas.setStroke("#404040");
-            for (int i = -72; i <= 72; i += 24) {
-                canvas.strokeLine(i, -72, i, 72);  // Vertical lines
-                canvas.strokeLine(-72, i, 72, i);  // Horizontal lines
-            }
-
-            // Draw field border
-            canvas.setStroke("#FFFFFF");
-            canvas.strokeRect(-72, -72, 144, 144);
-
-            // Draw origin marker
-            canvas.setStroke("#FFFF00"); // Yellow
-            canvas.strokeLine(-10, 0, 10, 0);
-            canvas.strokeLine(0, -10, 0, 10);
-
-            // Draw robot at current position
-            double robotSize = 18; // inches (18x18 robot)
-
-            canvas.setStroke("#3FBAFF"); // Blue outline
-            canvas.setFill("#3FBAFF");
-            canvas.fillRect(xPos - robotSize/2, yPos - robotSize/2, robotSize, robotSize);
-
-            // Draw heading indicator (front of robot)
-            double headingLineLength = 12; // inches
-            double headingX = xPos + headingLineLength * Math.cos(heading);
-            double headingY = yPos + headingLineLength * Math.sin(heading);
-
-            canvas.setStroke("#FF0000"); // Red heading line
-            canvas.setStrokeWidth(3);
-            canvas.strokeLine(xPos, yPos, headingX, headingY);
-
-            // Draw center point
-            canvas.setStroke("#00FF00"); // Green center dot
-            canvas.fillCircle(xPos, yPos, 3);
-
-            packet.put("Wheel Brake Active", wheelBreak);
-            packet.put("Intake Active", intakeActive);
-            packet.put("Shooter Active", shooterActive);
-            packet.put("Shooter Hinge Position", shooterHinge.getPosition());
-            packet.put("Robot X (in)", xPos);
-            packet.put("Robot Y (in)", yPos);
-            packet.put("Heading (rad)", heading);
-            packet.put("Heading (deg)", Math.toDegrees(heading));
-            packet.put("Front Left Encoder", frontLeftDrive.getCurrentPosition());
-            packet.put("Front Right Encoder", frontRightDrive.getCurrentPosition());
-            packet.put("Back Left Encoder", backLeftDrive.getCurrentPosition());
-            packet.put("Back Right Encoder", backRightDrive.getCurrentPosition());
-            packet.put("Odo Left Raw", intake.getCurrentPosition());
-            packet.put("Odo Right Raw", intake2.getCurrentPosition());
-            packet.put("Odo Back Raw", shooter.getCurrentPosition());
-            packet.put("Nerf Speed", nerf);
-            packet.put("Slow Mode", slow_mode);
-            packet.put("Wireless", "True");
-
-            dashboard.sendTelemetryPacket(packet);
-
-            telemetry.addData("Wheel Brake Active", wheelBreak);
-            telemetry.addData("Intake Active", intakeActive);
-            telemetry.addData("Shooter Active", shooterActive);
-            telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());
-            telemetry.addData("X Pos (in)", xPos);
-            telemetry.addData("Y Pos (in)", yPos);
-            telemetry.addData("Heading (deg)", Math.toDegrees(heading));
-            telemetry.addData("Front Left Encoder", frontLeftDrive.getCurrentPosition());
-            telemetry.addData("Front Right Encoder", frontRightDrive.getCurrentPosition());
-            telemetry.addData("Back Left Encoder", backLeftDrive.getCurrentPosition());
-            telemetry.addData("Back Right Encoder", backRightDrive.getCurrentPosition());
-            telemetry.addData("Odo Left", intake.getCurrentPosition());
-            telemetry.addData("Odo Right", intake2.getCurrentPosition());
-            telemetry.addData("Odo Back", shooter.getCurrentPosition());
-            telemetry.addData("Nerf Speed", nerf);
-            telemetry.addData("Slow Mode", slow_mode);
-            telemetry.addData("Wireless", "True");
-            telemetry.addData("Motor Power", "Front Left" + frontLeftDrive.getPower());
-            telemetry.addData("Motor Power", "Front Right" + frontRightDrive.getPower());
-            telemetry.addData("Motor Power", "Back Left" + backLeftDrive.getPower());
-            telemetry.addData("Motor Power", "Back Right" + backRightDrive.getPower());
+            sendDashboardTelemetry(batteryVoltage);
 
             telemetry.update();
-
             sleep(20);
         }
+    }
+
+    private void applyWheelBrake(DcMotor motor, int target) {
+        int error = target - motor.getCurrentPosition();
+        error = Math.max(-maxError, Math.min(maxError, error));
+        double power = kP * error;
+        power = Math.max(-maxPower, Math.min(maxPower, power));
+        motor.setPower(power);
+    }
+
+
+    private void handleIntake() {
+        if (gamepad2.left_bumper && !intakeActive) {
+            sleep(200);
+            intake.setPower(intake_speed);
+            intake2.setPower(intake_speed);
+            intakeActive = true;
+        } else if (gamepad2.left_bumper && intakeActive) {
+            sleep(200);
+            intake.setPower(0);
+            intake2.setPower(0);
+            intakeActive = false;
+        }
+    }
+
+    private void handleShooter() {
+        if (gamepad2.right_bumper) {
+            sleep(200);
+            shooterActive = !shooterActive;
+            shooter.setPower(shooterActive ? shooter_power : 0);
+            intakeToShooter.setPower(shooterActive ? intakeToShooter_power : 0);
+            intakeToShooter2.setPower(shooterActive ? intakeToShooter_power : 0);
+        }
+    }
+
+    private void handleShooterHinge() {
+        if (gamepad2.a) {
+            sleep(200);
+            shooterUp = !shooterUp;
+            shooterHinge.setPosition(shooterUp ? 1 : 0);
+        }
+    }
+
+    private void sendDashboardTelemetry(double batteryVoltage) {
+        TelemetryPacket packet = new TelemetryPacket();
+        Canvas canvas = packet.fieldOverlay();
+
+        // --- Draw field grid ---
+        canvas.setStroke("#404040");
+        for (int i = -72; i <= 72; i += 24) {
+            canvas.strokeLine(i, -72, i, 72);
+            canvas.strokeLine(-72, i, 72, i);
+        }
+
+        canvas.setStroke("#FFFFFF");
+        canvas.strokeRect(-72, -72, 144, 144);
+
+        // Origin marker
+        canvas.setStroke("#FFFF00");
+        canvas.strokeLine(-10, 0, 10, 0);
+        canvas.strokeLine(0, -10, 0, 10);
+
+        // Robot rectangle
+        double robotSize = 18;
+        canvas.setStroke("#3FBAFF");
+        canvas.setFill("#3FBAFF");
+        canvas.fillRect(xPos - robotSize / 2, yPos - robotSize / 2, robotSize, robotSize);
+
+        // Heading indicator
+        double headingLineLength = 12;
+        double headingX = xPos + headingLineLength * Math.cos(heading);
+        double headingY = yPos + headingLineLength * Math.sin(heading);
+        canvas.setStroke("#FF0000");
+        canvas.setStrokeWidth(3);
+        canvas.strokeLine(xPos, yPos, headingX, headingY);
+
+        // Center point
+        canvas.setStroke("#00FF00");
+        canvas.fillCircle(xPos, yPos, 3);
+
+        // Telemetry values
+        packet.put("Wheel Brake Active", wheelBreak);
+        packet.put("Intake Active", intakeActive);
+        packet.put("Shooter Active", shooterActive);
+        packet.put("Shooter Hinge Position", shooterHinge.getPosition());
+        packet.put("Robot X (in)", xPos);
+        packet.put("Robot Y (in)", yPos);
+        packet.put("Heading (rad)", heading);
+        packet.put("Heading (deg)", Math.toDegrees(heading));
+        packet.put("Front Left Encoder", frontLeftDrive.getCurrentPosition());
+        packet.put("Front Right Encoder", frontRightDrive.getCurrentPosition());
+        packet.put("Back Left Encoder", backLeftDrive.getCurrentPosition());
+        packet.put("Back Right Encoder", backRightDrive.getCurrentPosition());
+        packet.put("Odo Left Raw", intake.getCurrentPosition());
+        packet.put("Odo Right Raw", intake2.getCurrentPosition());
+        packet.put("Odo Back Raw", shooter.getCurrentPosition());
+        packet.put("Nerf Speed", 0.5);
+        packet.put("Slow Mode", slow_mode);
+        packet.put("Battery Voltage (V)", batteryVoltage);
+
+        dashboard.sendTelemetryPacket(packet);
     }
 }
