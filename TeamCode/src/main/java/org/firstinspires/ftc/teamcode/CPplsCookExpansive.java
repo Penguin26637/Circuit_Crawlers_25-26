@@ -194,14 +194,14 @@ public class CPplsCookExpansive extends LinearOpMode {
 
             TelemetryPacket packet = new TelemetryPacket();
 
-            if (gamepad1.x && robot_centric) {
+            if (gamepad1.a && robot_centric) {
                 robot_centric = false;
                 field_centric = true;
                 sleep(200);
                 packet.put("field centric testing", field_centric);
                 packet.put("robot centric testing", robot_centric);
             }
-            else if (gamepad1.a && field_centric) {
+            else if (gamepad1.y && field_centric) {
 
                 field_centric = false;
                 robot_centric = true;
