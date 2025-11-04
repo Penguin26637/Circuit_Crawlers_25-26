@@ -44,7 +44,7 @@ public class CPplsCookExpansive extends LinearOpMode {
     public static double intakeToShooter_power = 0.5;
 
     // --- Odometry constants ---
-    public static double TICKS_PER_INCH = 1377; // REV Odometry Pod 48mm wheel
+    public static double TICKS_PER_INCH = 337.2; // REV Odometry Pod 48mm wheel
     public static double TRACK_WIDTH = 13.5;    // distance between left/right wheels (inches)
     public static double BACK_WHEEL_OFFSET = 8; // distance from center (inches)
 
@@ -75,9 +75,9 @@ public class CPplsCookExpansive extends LinearOpMode {
 
     private void updateOdometry() {
         // --- Read encoder values ---
-        int leftPos = intake.getCurrentPosition();
-        int rightPos = intake2.getCurrentPosition();
-        int backPos = shooter.getCurrentPosition();
+        int leftPos = -1*(intake.getCurrentPosition());
+        int rightPos = 1*(intake2.getCurrentPosition());
+        int backPos = 1*(shooter.getCurrentPosition());
 
         int deltaLeft = leftPos - prevLeft;
         int deltaRight = rightPos - prevRight;
@@ -192,15 +192,25 @@ public class CPplsCookExpansive extends LinearOpMode {
             double LATdrive = -gamepad1.left_stick_x * nerf;
             double Turndrive = -gamepad1.right_stick_x * nerf;
 
+            TelemetryPacket packet = new TelemetryPacket();
+
             if (gamepad1.x && robot_centric) {
                 robot_centric = false;
                 field_centric = true;
-                sleep(20);
-            } else if (gamepad1.x && field_centric) {
+                sleep(200);
+                packet.put("field centric testing", field_centric);
+                packet.put("robot centric testing", robot_centric);
+            }
+            else if (gamepad1.a && field_centric) {
+
                 field_centric = false;
                 robot_centric = true;
-                sleep(20);
-            }
+                sleep(200);
+                packet.put("robot centric testing", robot_centric);
+                packet.put("field centric testing", field_centric);
+        }
+
+            dashboard.sendTelemetryPacket(packet);
 
 
             // --- Wheel brake toggle ---
@@ -266,6 +276,17 @@ public class CPplsCookExpansive extends LinearOpMode {
             }
 
             else if (!wheelBreak && field_centric) {
+
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+                frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
                 double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 double x = gamepad1.left_stick_x;
                 double rx = gamepad1.right_stick_x;
@@ -404,7 +425,7 @@ public class CPplsCookExpansive extends LinearOpMode {
         packet.put("Front Right Encoder", frontRightDrive.getCurrentPosition());
         packet.put("Back Left Encoder", backLeftDrive.getCurrentPosition());
         packet.put("Back Right Encoder", backRightDrive.getCurrentPosition());
-        packet.put("Odo Left Raw", intake.getCurrentPosition());
+        packet.put("Odo Left Raw", -intake.getCurrentPosition());
         packet.put("Odo Right Raw", intake2.getCurrentPosition());
         packet.put("Odo Back Raw", shooter.getCurrentPosition());
         packet.put("Nerf Speed", 0.5);

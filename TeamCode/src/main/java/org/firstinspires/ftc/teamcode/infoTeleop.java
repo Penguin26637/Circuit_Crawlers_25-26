@@ -53,6 +53,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 
 @TeleOp(name="infoTeleop", group="Linear OpMode")
+@Disabled
 public class infoTeleop extends LinearOpMode {
 
     // Declare OpMode members.

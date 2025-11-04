@@ -56,7 +56,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 
 @Autonomous(name="Initial Auto Park", group="Robot")
-//@Disabled
+@Disabled
 public class InitialAutoPark extends LinearOpMode {
 
     /* Declare OpMode members. */
