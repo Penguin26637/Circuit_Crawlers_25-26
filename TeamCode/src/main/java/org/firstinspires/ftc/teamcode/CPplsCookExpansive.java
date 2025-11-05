@@ -420,6 +420,7 @@ public class CPplsCookExpansive extends LinearOpMode {
         packet.put("Robot X (in)", xPos);
         packet.put("Robot Y (in)", yPos);
         packet.put("Heading (rad)", heading);
+
         packet.put("Heading (deg)", Math.toDegrees(heading));
         packet.put("Front Left Encoder", frontLeftDrive.getCurrentPosition());
         packet.put("Front Right Encoder", frontRightDrive.getCurrentPosition());
