@@ -32,6 +32,7 @@ import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -63,14 +64,14 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 1;
-        public double lateralInPerTick = inPerTick;
-        public double trackWidthTicks = 0;
+        public double inPerTick = 0.002952835531;
+        public double lateralInPerTick = 0.0022020822207836476;
+        public double trackWidthTicks = 3699.105700112879;
 
         // feedforward parameters (in tick units)
-        public double kS = 0;
-        public double kV = 0;
-        public double kA = 0;
+        public double kS = 0.8635818022579794;
+        public double kV = 0.00030566959383495863;
+        public double kA = 0.0001;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;
@@ -86,9 +87,9 @@ public final class MecanumDrive {
         public double lateralGain = 0.0;
         public double headingGain = 0.0; // shared with turn
 
-        public double axialVelGain = 0.0;
+        public double axialVelGain = 2.5;
         public double lateralVelGain = 0.0;
-        public double headingVelGain = 0.0; // shared with turn
+        public double headingVelGain = 3; // shared with turn
     }
 
     public static Params PARAMS = new Params();
@@ -143,17 +144,17 @@ public final class MecanumDrive {
             this.pose = pose;
         }
 
-        @Override
+        //@Override
         public void setPose(Pose2d pose) {
             this.pose = pose;
         }
 
-        @Override
+        //@Override
         public Pose2d getPose() {
             return pose;
         }
 
-        @Override
+        //@Override
         public PoseVelocity2d update() {
             PositionVelocityPair leftFrontPosVel = leftFront.getPositionAndVelocity();
             PositionVelocityPair leftBackPosVel = leftBack.getPositionAndVelocity();
@@ -237,7 +238,8 @@ public final class MecanumDrive {
 
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        leftFront.setDirection((DcMotorSimple.Direction.REVERSE));
+        leftBack.setDirection((DcMotorSimple.Direction.REVERSE));
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         lazyImu = new LazyHardwareMapImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
@@ -245,7 +247,7 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, );
+        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick, pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -286,7 +288,7 @@ public final class MecanumDrive {
             }
         }
 
-        @Override
+        //@Override
         public boolean run(@NonNull TelemetryPacket p) {
             double t;
             if (beginTs < 0) {
@@ -361,7 +363,7 @@ public final class MecanumDrive {
             return true;
         }
 
-        @Override
+        //@Override
         public void preview(Canvas c) {
             c.setStroke("#4CAF507A");
             c.setStrokeWidth(1);
@@ -378,7 +380,7 @@ public final class MecanumDrive {
             this.turn = turn;
         }
 
-        @Override
+        //@Override
         public boolean run(@NonNull TelemetryPacket p) {
             double t;
             if (beginTs < 0) {
@@ -441,7 +443,7 @@ public final class MecanumDrive {
             return true;
         }
 
-        @Override
+        //@Override
         public void preview(Canvas c) {
             c.setStroke("#7C4DFF7A");
             c.fillCircle(turn.beginPose.position.x, turn.beginPose.position.y, 2);
