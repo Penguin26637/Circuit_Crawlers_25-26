@@ -171,21 +171,20 @@ public class CP_PLEASE extends LinearOpMode {
         Action trajectoryActionChosen;
         if (startPosition == 1) {
             trajectoryActionChosen = tab1.build();
-//        } else if (startPosition == 2) {
-//            trajectoryActionChosen = tab2.build();
-//        } else {
-//            trajectoryActionChosen = tab3.build();
-//        }
+        } else if (startPosition == 2) {
+            trajectoryActionChosen = tab2.build();
+        } else {
+            trajectoryActionChosen = tab3.build();
+        }
 
-//        Actions.runBlocking(
-//                new SequentialAction(
-//                        trajectoryActionChosen,
+        Actions.runBlocking(
+                new SequentialAction(
+                        trajectoryActionChosen,
 //                        lift.liftUp(),
 //                        claw.openClaw(),
 //                        lift.liftDown(),
-//                        trajectoryActionCloseOut
-//                )
-//        );
-        }
+                        trajectoryActionCloseOut
+                )
+        );
     }
 }
