@@ -4,6 +4,9 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.dashboard.canvas.Canvas;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -76,8 +79,8 @@ public class CPplsCookExpansive extends LinearOpMode {
     private void updateOdometry() {
         // --- Read encoder values ---
         int leftPos = -1*(intake.getCurrentPosition());
-        int rightPos = 1*(intake2.getCurrentPosition());
-        int backPos = 1*(shooter.getCurrentPosition());
+        int rightPos = (intake2.getCurrentPosition());
+        int backPos = (shooter.getCurrentPosition());
 
         int deltaLeft = leftPos - prevLeft;
         int deltaRight = rightPos - prevRight;
@@ -172,7 +175,7 @@ public class CPplsCookExpansive extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        double nerf = 0.5;
+        double nerf = 0.75;
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -248,7 +251,15 @@ public class CPplsCookExpansive extends LinearOpMode {
                 sleep(200);
             }
 
+            if(!slow_mode && gamepad1.right_bumper){
+                nerf = 0.1;
+                slow_mode = true;
+            } else if (slow_mode && gamepad1.right_bumper) {
+                nerf = 0.75;
+                slow_mode = false;
 
+
+            }
 
 
             // --- Wheel brake control ---
@@ -257,6 +268,10 @@ public class CPplsCookExpansive extends LinearOpMode {
                 applyWheelBrake(frontRightDrive, wheelBreakTargetFR);
                 applyWheelBrake(backLeftDrive, wheelBreakTargetBL);
                 applyWheelBrake(backRightDrive, wheelBreakTargetBR);
+
+                //put the stay code here
+
+
                 telemetry.addData("WHEEL BRAKE ACTIVE", "True");
             } else if (!wheelBreak && robot_centric) {
                 frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -287,9 +302,9 @@ public class CPplsCookExpansive extends LinearOpMode {
                 backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-                double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-                double x = gamepad1.left_stick_x;
-                double rx = gamepad1.right_stick_x;
+                double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
+                double x = gamepad1.left_stick_x * nerf;
+                double rx = gamepad1.right_stick_x * nerf;
 
                 // This button choice was made so that it is hard to hit on accident,
                 // it can be freely changed based on preference.
@@ -320,6 +335,8 @@ public class CPplsCookExpansive extends LinearOpMode {
                 frontRightDrive.setPower(frontRightPower);
                 backRightDrive.setPower(backRightPower);
             }
+
+
 
             // --- Gamepad 2 controls ---
             handleIntake();
@@ -432,7 +449,29 @@ public class CPplsCookExpansive extends LinearOpMode {
         packet.put("Nerf Speed", 0.5);
         packet.put("Slow Mode", slow_mode);
         packet.put("Battery Voltage (V)", batteryVoltage);
+        packet.put("GE", true);
 
         dashboard.sendTelemetryPacket(packet);
+
+        telemetry.addData("Wheel Brake Active", wheelBreak);
+        telemetry.addData("Intake Active", intakeActive);
+        telemetry.addData("Shooter Active", shooterActive);
+        telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());
+        telemetry.addData("Robot X (in)", xPos);
+        telemetry.addData("Robot Y (in)", yPos);
+        telemetry.addData("Heading (rad)", heading);
+
+        telemetry.addData("Heading (deg)", Math.toDegrees(heading));
+        telemetry.addData("Front Left Encoder", frontLeftDrive.getCurrentPosition());
+        telemetry.addData("Front Right Encoder", frontRightDrive.getCurrentPosition());
+        telemetry.addData("Back Left Encoder", backLeftDrive.getCurrentPosition());
+        telemetry.addData("Back Right Encoder", backRightDrive.getCurrentPosition());
+        telemetry.addData("Odo Left Raw", -intake.getCurrentPosition());
+        telemetry.addData("Odo Right Raw", intake2.getCurrentPosition());
+        telemetry.addData("Odo Back Raw", shooter.getCurrentPosition());
+        telemetry.addData("Nerf Speed", 0.5);
+        telemetry.addData("Slow Mode", slow_mode);
+        telemetry.addData("Battery Voltage (V)", batteryVoltage);
+        telemetry.addData("GE", true);
     }
 }
