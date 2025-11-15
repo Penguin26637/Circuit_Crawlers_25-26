@@ -207,20 +207,20 @@ public class CPplsCook extends LinearOpMode {
             if (wheelBreak) {
                 if (wheelBreak) {
                     // Set current odometry to RR localizer
-                    rrDrive.setPoseEstimate(new Pose2d(xPos, yPos, heading));
-
-                    // Define target pose to hold
-                    Pose2d targetPose = new Pose2d(hold_targetX, hold_targetY, 0);
-
-                    // Generate drive signal for target pose
-                    DriveSignal signal = rrDrive.getDriveSignalForPose(targetPose);
-
-                    // Send drive signal to motors
-                    rrDrive.setDriveSignal(signal);
-
-                    telemetry.addData("Wheel Brake Active", true);
-                    telemetry.addData("Target X", targetPose.getX());
-                    telemetry.addData("Target Y", targetPose.getY());
+//                    rrDrive.setPoseEstimate(new Pose2d(xPos, yPos, heading));
+//
+//                    // Define target pose to hold
+//                    Pose2d targetPose = new Pose2d(hold_targetX, hold_targetY, 0);
+//
+//                    // Generate drive signal for target pose
+//                    DriveSignal signal = rrDrive.getDriveSignalForPose(targetPose);
+//
+//                    // Send drive signal to motors
+//                    rrDrive.setDriveSignal(signal);
+//
+//                    telemetry.addData("Wheel Brake Active", true);
+//                    telemetry.addData("Target X", targetPose.getX());
+//                    telemetry.addData("Target Y", targetPose.getY());
                     telemetry.addData("Current X", xPos);
                     telemetry.addData("Current Y", yPos);
                 }
