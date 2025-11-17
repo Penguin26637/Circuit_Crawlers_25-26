@@ -15,22 +15,27 @@ public class MyClass {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 14)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-54, 46, 0))
-                .turn(Math.toRadians(-55))
-                .splineTo(new Vector2d(-11, 41), Math.PI / 2)
-                .lineToY(50)
-                .splineTo(new Vector2d(-25,28), Math.PI/2)
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-54, -46, 0))
+                .turn(Math.toRadians(55))
+                .lineToX(-40)
+//                .splineTo(new Vector2d(-33, -33), Math.PI / 2)
+                .splineTo(new Vector2d(-12, -25), Math.PI / 2)
+                .turn(Math.toRadians(180))
+                .lineToY(-50)
+                .splineTo(new Vector2d(-25,-28), Math.PI/2)
+                .turn(Math.toRadians(30))
+                .waitSeconds(3)
+                .splineTo(new Vector2d(10,-27), Math.PI/2)
+                .turn(Math.toRadians(180))
 //                .splineToLinearHeading(new Pose2d(-25, 28, 250), Math.PI / 2)
-                .turn(Math.toRadians(-200))
+                .lineToY(-50)
+                .splineTo(new Vector2d(-25,-28), Math.PI/2)
+                .turn(Math.toRadians(30))
                 .waitSeconds(3)
-                .splineTo(new Vector2d(11,41), Math.PI/2)
-                .lineToY(50)
-                .splineTo(new Vector2d(-25,28), Math.PI/2)
-                .turn(Math.toRadians(-200))
+                .splineTo(new Vector2d(-12,-35), Math.PI/2)
+
                 .waitSeconds(3)
-                .splineTo(new Vector2d(-11,34), Math.PI/2)
-//                .waitSeconds(6)
-//                .lineToY(35)
+
 
                 //24 seconds
                 .build());
