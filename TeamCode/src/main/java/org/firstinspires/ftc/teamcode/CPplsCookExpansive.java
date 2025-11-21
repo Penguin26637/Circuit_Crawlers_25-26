@@ -290,84 +290,75 @@ public class CPplsCookExpansive extends LinearOpMode {
                 frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
             }
 
-            else if (!wheelBreak && field_centric) {
-
-                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-                frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
-                double x = gamepad1.left_stick_x * nerf;
-                double rx = gamepad1.right_stick_x * nerf;
-
-                // This button choice was made so that it is hard to hit on accident,
-                // it can be freely changed based on preference.
-                // The equivalent button is start on Xbox-style controllers.
-                if (gamepad1.start) {
-                    imu.resetYaw();
-                // ... other code ...
-
-            // The odometry system object must be initialized elsewhere in your OpMode, e.g., in the init() method.
-            // Example placeholder:
-            // private OdometrySystem odometrySystem; 
-            
             // else if (!wheelBreak && field_centric) {
-            //     frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            //     frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            //     backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            //     backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            //     frontLeftDrive.setMode(DcData.RunMode.RUN_USING_ENCODER);
-            //     frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            //     backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            //     backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            
-            //     double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
-            //     double x = gamepad1.left_stick_x * nerf;
-            //     double rx = gamepad1.right_stick_x * nerf;
-            
-            //     // This button choice was made so that it is hard to hit on accident,
-            //     // it can be freely changed based on preference.
-            //     // The equivalent button is start on Xbox-style controllers.
-            //     if (gamepad1.start) {
-            //         // Use odometry system's reset method instead of IMU's
-            //         odometrySystem.resetHeading(); 
-            //     }
-            
-            //     // Get bot heading from the odometry system, ensuring it's in radians
-            //     double botHeading = odometrySystem.getHeading(); 
-            
-            //     // Rotate the movement direction counter to the bot's rotation
-            //     double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-            //     double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-            
-            //     rotX = rotX * 1.1; // Counteract imperfect strafing
-            
-            //     // Denominator is the largest motor power (absolute value) or 1
-            //     // This ensures all the powers maintain the same ratio,
-            //     // but only if at least one is out of the range [-1, 1]
-            //     double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            
-            //     double frontLeftPower = (rotY + rotX + rx) / denominator;
-            //     double backLeftPower = (rotY - rotX + rx) / denominator;
-            //     double frontRightPower = (rotY - rotX - rx) / denominator;
-            //     double backRightPower = (rotY + rotX - rx) / denominator;
-            
-            //     frontLeftDrive.setPower(frontLeftPower);
-            //     backLeftDrive.setPower(backLeftPower);
-            //     frontRightDrive.setPower(frontRightPower);
-            //     backRightDrive.setPower(backRightPower);
-            // }
+//OLD CODE DOESNT REALLY WORK
+                // frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                // frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                // backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                // backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+                // frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+                // double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
+                // double x = gamepad1.left_stick_x * nerf;
+                // double rx = gamepad1.right_stick_x * nerf;
 
+                // // This button choice was made so that it is hard to hit on accident,
+                // // it can be freely changed based on preference.
+                // // The equivalent button is start on Xbox-style controllers.
+                // if (gamepad1.start) {
+                //     imu.resetYaw();
+                // // ... other code ...
+
+// NEW CODE NEEDS TESTING
+
+            else if (!wheelBreak && field_centric) { 
+                //Break recommended but may not be needed
+
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
                 
+                double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
+                double x = gamepad1.left_stick_x * nerf; 
+                double rx = gamepad1.right_stick_x * nerf; 
+
+
+                if (gamepad1.start) { 
+                    // Reset the global heading variable. You might also want to reset xPos and yPos here.
+                    heading = 0.0; 
+                    // xPos = 0.0;
+                    // yPos = 0.0;
+                    // may want to reset xy but probably not
+                } 
+
+                // Get bot heading from the heading variable, already in radians
+                double botHeading = heading; 
+
+                // Rotate the movement direction counter to the bot's rotation
+                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading); 
+                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading); 
+                rotX = rotX * 1.1; // Counteract imperfect strafing
+
+                // Denominator is the largest motor power (absolute value) or 1
+                // This ensures all the powers maintain the same ratio,
+                // but only if at least one is out of the range [-1, 1]
+                double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1); 
+                double frontLeftPower = (rotY + rotX + rx) / denominator; 
+                double backLeftPower = (rotY - rotX + rx) / denominator; 
+                double frontRightPower = (rotY - rotX - rx) / denominator; 
+                double backRightPower = (rotY + rotX - rx) / denominator; 
+                
+                frontLeftDrive.setPower(frontLeftPower); 
+                backLeftDrive.setPower(backLeftPower); 
+                frontRightDrive.setPower(frontRightPower); 
+                backRightDrive.setPower(backRightPower); 
                 }
+            }
 
                 double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
