@@ -4,7 +4,9 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.dashboard.canvas.Canvas;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -14,21 +16,22 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import com.qualcomm.robotcore.util.Range;
-//import com.acmerobotics.roadrunner.drive.DriveSignal;
-//import com.acmerobotics.roadrunner.MecanumDrive;
-//import com.acmerobotics.roadrunner.Localizer;
-import com.acmerobotics.roadrunner.Pose2d;
-@TeleOp(name="CPplsCook", group="Linear OpMode")
+
+@TeleOp(name="CPUplsCookExpansive", group="Linear OpMode")
 @Config
-public class CPplsCook extends LinearOpMode {
+public class CPUplsCookExpansive extends LinearOpMode {
 
     // --- Gamepad 1 drive motors ---
     private DcMotor frontLeftDrive, frontRightDrive, backLeftDrive, backRightDrive;
 
     // --- Wheel brake ---
     public static boolean wheelBreak = false;
+    public static int wheelBreakTargetFL, wheelBreakTargetFR, wheelBreakTargetBL, wheelBreakTargetBR;
+    public static double wheelBreak_kP = 0.01;
+    public static double wheelBreak_maxPower = 0.2;
+    public static int wheelBreak_maxError = 100;
 
     // --- Odometry encoders (no motors attached, just encoder readings) ---
     private DcMotor intake, intake2, shooter;
@@ -44,9 +47,9 @@ public class CPplsCook extends LinearOpMode {
     public static double intakeToShooter_power = 0.5;
 
     // --- Odometry constants ---
-    public static double TICKS_PER_INCH = 337.2;
-    public static double TRACK_WIDTH = 13.5;
-    public static double BACK_WHEEL_OFFSET = 8;
+    public static double TICKS_PER_INCH = 337.2; // REV Odometry Pod 48mm wheel
+    public static double TRACK_WIDTH = 13.5;    // distance between left/right wheels (inches)
+    public static double BACK_WHEEL_OFFSET = 8; // distance from center (inches)
 
     private double xPos = 0, yPos = 0, heading = 0;
     private int prevLeft = 0, prevRight = 0, prevBack = 0;
@@ -60,18 +63,9 @@ public class CPplsCook extends LinearOpMode {
     public static boolean slow_mode = false;
     public static boolean robot_centric = true;
     public static boolean field_centric = false;
-    public static double kP = 0.01;
-    public static double maxPower = 0.2;
+    public static double kP = 0.01;      // Proportional control constant
+    public static double maxPower = 0.2; // Maximum motor power (range: 0–1)
     public static int maxError = 100;
-
-    // --- PID for position hold ---
-    public static double hold_kP = 0.05;
-    public static double hold_maxPower = 0.3;
-    public static double hold_targetX = 36;
-    public static double hold_targetY = -36;
-
-    // --- Road Runner drive ---
-    private MecanumDrive rrDrive;
 
     private double getBatteryVoltage() {
         double result = Double.POSITIVE_INFINITY;
@@ -83,9 +77,10 @@ public class CPplsCook extends LinearOpMode {
     }
 
     private void updateOdometry() {
+        // --- Read encoder values ---
         int leftPos = -1*(intake.getCurrentPosition());
-        int rightPos = 1*(intake2.getCurrentPosition());
-        int backPos = 1*(shooter.getCurrentPosition());
+        int rightPos = (intake2.getCurrentPosition());
+        int backPos = (shooter.getCurrentPosition());
 
         int deltaLeft = leftPos - prevLeft;
         int deltaRight = rightPos - prevRight;
@@ -95,14 +90,17 @@ public class CPplsCook extends LinearOpMode {
         prevRight = rightPos;
         prevBack = backPos;
 
+        // --- Convert ticks to inches ---
         double dLeft = deltaLeft / TICKS_PER_INCH;
         double dRight = deltaRight / TICKS_PER_INCH;
         double dBack = deltaBack / TICKS_PER_INCH;
 
+        // --- Odometry math ---
         double dHeading = (dRight - dLeft) / TRACK_WIDTH;
         double dForward = (dLeft + dRight) / 2.0;
         double dSide = dBack - (dHeading * BACK_WHEEL_OFFSET);
 
+        // Update global position
         double sinHeading = Math.sin(heading);
         double cosHeading = Math.cos(heading);
 
@@ -116,17 +114,26 @@ public class CPplsCook extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        // --- Hardware Mapping ---
         frontLeftDrive = hardwareMap.get(DcMotor.class, "frontl");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontr");
         backLeftDrive = hardwareMap.get(DcMotor.class, "backl");
         backRightDrive = hardwareMap.get(DcMotor.class, "backr");
 
+        // Odometry pods (connected to motor ports but no motors attached)
         intake = hardwareMap.get(DcMotor.class, "i");
         intake2 = hardwareMap.get(DcMotor.class, "i2");
         shooter = hardwareMap.get(DcMotor.class, "s");
         shooterHinge = hardwareMap.get(Servo.class, "sH");
         intakeToShooter = hardwareMap.get(CRServo.class, "its");
         intakeToShooter2 = hardwareMap.get(CRServo.class, "its2");
+
+        // --- Odometry encoder setup ---
+        telemetry.addData("Before Reset - Left", intake.getCurrentPosition());
+        telemetry.addData("Before Reset - Right", intake2.getCurrentPosition());
+        telemetry.addData("Before Reset - Back", shooter.getCurrentPosition());
+        telemetry.update();
+        sleep(1000);
 
         intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         intake2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -137,10 +144,21 @@ public class CPplsCook extends LinearOpMode {
         intake2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        intake.setPower(0);
+        intake2.setPower(0);
+        shooter.setPower(0);
+
         prevLeft = intake.getCurrentPosition();
         prevRight = intake2.getCurrentPosition();
         prevBack = shooter.getCurrentPosition();
 
+        telemetry.addData("After Reset - Left", prevLeft);
+        telemetry.addData("After Reset - Right", prevRight);
+        telemetry.addData("After Reset - Back", prevBack);
+        telemetry.update();
+        sleep(2000);
+
+        // --- Motor directions ---
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -152,9 +170,6 @@ public class CPplsCook extends LinearOpMode {
         backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         dashboard = FtcDashboard.getInstance();
-
-//        rrDrive = new MecanumDrive(frontLeftDrive, frontRightDrive, backLeftDrive, backRightDrive);
-
         telemetry.addLine("Waiting for start...");
         telemetry.update();
         waitForStart();
@@ -162,11 +177,15 @@ public class CPplsCook extends LinearOpMode {
 
         double nerf = 0.75;
 
+        // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
+        // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
+
 
         while (opModeIsActive()) {
             updateOdometry();
@@ -182,16 +201,53 @@ public class CPplsCook extends LinearOpMode {
                 robot_centric = false;
                 field_centric = true;
                 sleep(200);
-            } else if (gamepad1.y && field_centric) {
+                packet.put("field centric testing", field_centric);
+                packet.put("robot centric testing", robot_centric);
+            }
+            else if (gamepad1.y && field_centric) {
+
                 field_centric = false;
                 robot_centric = true;
                 sleep(200);
-            }
+                packet.put("robot centric testing", robot_centric);
+                packet.put("field centric testing", field_centric);
+        }
 
             dashboard.sendTelemetryPacket(packet);
 
-            if (gamepad1.left_stick_button && gamepad1.right_stick_button) {
-                wheelBreak = !wheelBreak;
+
+            // --- Wheel brake toggle ---
+            if (gamepad1.left_stick_button && gamepad1.right_stick_button && !wheelBreak) {
+                wheelBreak = true;
+                sleep(200);
+
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+                frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                frontLeftDrive.setTargetPosition(0);
+                frontRightDrive.setTargetPosition(0);
+                backLeftDrive.setTargetPosition(0);
+                backRightDrive.setTargetPosition(0);
+
+                frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                wheelBreakTargetFL = frontLeftDrive.getCurrentPosition();
+                wheelBreakTargetFR = frontRightDrive.getCurrentPosition();
+                wheelBreakTargetBL = backLeftDrive.getCurrentPosition();
+                wheelBreakTargetBR = backRightDrive.getCurrentPosition();
+
+            } else if (gamepad1.left_stick_button && gamepad1.right_stick_button && wheelBreak) {
+                wheelBreak = false;
                 sleep(200);
             }
 
@@ -201,37 +257,23 @@ public class CPplsCook extends LinearOpMode {
             } else if (slow_mode && gamepad1.right_bumper) {
                 nerf = 0.75;
                 slow_mode = false;
+
+
             }
 
-            // --- PID-based Wheel Brake ---
+
+            // --- Wheel brake control ---
             if (wheelBreak) {
-                if (wheelBreak) {
-                    // Set current odometry to RR localizer
-//                    rrDrive.setPoseEstimate(new Pose2d(xPos, yPos, heading));
-//
-//                    // Define target pose to hold
-//                    Pose2d targetPose = new Pose2d(hold_targetX, hold_targetY, 0);
-//
-//                    // Generate drive signal for target pose
-//                    DriveSignal signal = rrDrive.getDriveSignalForPose(targetPose);
-//
-//                    // Send drive signal to motors
-//                    rrDrive.setDriveSignal(signal);
-//
-//                    telemetry.addData("Wheel Brake Active", true);
-//                    telemetry.addData("Target X", targetPose.getX());
-//                    telemetry.addData("Target Y", targetPose.getY());
-                    telemetry.addData("Current X", xPos);
-                    telemetry.addData("Current Y", yPos);
-                }
-//                applyPositionHold();
-//                telemetry.addData("WHEEL BRAKE ACTIVE", true);
-//                telemetry.addData("Target X", hold_targetX);
-//                telemetry.addData("Target Y", hold_targetY);
-//                telemetry.addData("Current X", xPos);
-//                telemetry.addData("Current Y", yPos);
-            }
-            else if (!wheelBreak && robot_centric) {
+                applyWheelBrake(frontLeftDrive, wheelBreakTargetFL);
+                applyWheelBrake(frontRightDrive, wheelBreakTargetFR);
+                applyWheelBrake(backLeftDrive, wheelBreakTargetBL);
+                applyWheelBrake(backRightDrive, wheelBreakTargetBR);
+
+                //put the stay code here
+
+
+                telemetry.addData("WHEEL BRAKE ACTIVE", "True");
+            } else if (!wheelBreak && robot_centric) {
                 frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
                 backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -247,29 +289,89 @@ public class CPplsCook extends LinearOpMode {
                 frontLeftDrive.setPower(Logdrive - LATdrive - Turndrive);
                 frontRightDrive.setPower(Logdrive + LATdrive + Turndrive);
             }
-            else if (!wheelBreak && field_centric) {
-                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-                frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            // else if (!wheelBreak && field_centric) {
+//OLD CODE DOESNT REALLY WORK
+                // frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                // frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                // backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                // backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-                double y = -gamepad1.left_stick_y * nerf;
-                double x = gamepad1.left_stick_x * nerf;
-                double rx = gamepad1.right_stick_x * nerf;
+                // frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-                if (gamepad1.start) imu.resetYaw();
+                // double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
+                // double x = gamepad1.left_stick_x * nerf;
+                // double rx = gamepad1.right_stick_x * nerf;
+
+                // // This button choice was made so that it is hard to hit on accident,
+                // // it can be freely changed based on preference.
+                // // The equivalent button is start on Xbox-style controllers.
+                // if (gamepad1.start) {
+                //     imu.resetYaw();
+                // // ... other code ...
+
+// NEW CODE NEEDS TESTING
+
+            else if (!wheelBreak && field_centric) { 
+                //Break recommended but may not be needed
+
+                frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); 
+                
+                double y = -gamepad1.left_stick_y * nerf; // Remember, Y stick value is reversed
+                double x = gamepad1.left_stick_x * nerf; 
+                double rx = gamepad1.right_stick_x * nerf; 
+
+
+                if (gamepad1.start) { 
+                    // Reset the global heading variable. You might also want to reset xPos and yPos here.
+                    heading = 0.0; 
+                    // xPos = 0.0;
+                    // yPos = 0.0;
+                    // may want to reset xy but probably not
+                } 
+
+                // Get bot heading from the heading variable, already in radians
+                double botHeading = heading; 
+
+                // Rotate the movement direction counter to the bot's rotation
+                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading); 
+                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading); 
+                rotX = rotX * 1.1; // Counteract imperfect strafing
+
+                // Denominator is the largest motor power (absolute value) or 1
+                // This ensures all the powers maintain the same ratio,
+                // but only if at least one is out of the range [-1, 1]
+                double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1); 
+                double frontLeftPower = (rotY + rotX + rx) / denominator; 
+                double backLeftPower = (rotY - rotX + rx) / denominator; 
+                double frontRightPower = (rotY - rotX - rx) / denominator; 
+                double backRightPower = (rotY + rotX - rx) / denominator; 
+                
+                frontLeftDrive.setPower(frontLeftPower); 
+                backLeftDrive.setPower(backLeftPower); 
+                frontRightDrive.setPower(frontRightPower); 
+                backRightDrive.setPower(backRightPower); 
+                
+                }
+            }
 
                 double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
+                // Rotate the movement direction counter to the bot's rotation
                 double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
                 double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-                rotX = rotX * 1.1;
 
+                rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+                // Denominator is the largest motor power (absolute value) or 1
+                // This ensures all the powers maintain the same ratio,
+                // but only if at least one is out of the range [-1, 1]
                 double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
                 double frontLeftPower = (rotY + rotX + rx) / denominator;
                 double backLeftPower = (rotY - rotX + rx) / denominator;
@@ -282,10 +384,14 @@ public class CPplsCook extends LinearOpMode {
                 backRightDrive.setPower(backRightPower);
             }
 
+
+
+            // --- Gamepad 2 controls ---
             handleIntake();
             handleShooter();
             handleShooterHinge();
 
+            // --- Dashboard telemetry ---
             sendDashboardTelemetry(batteryVoltage);
 
             telemetry.update();
@@ -293,18 +399,14 @@ public class CPplsCook extends LinearOpMode {
         }
     }
 
-//    private void applyPositionHold() {
-//        double errorX = hold_targetX - xPos;
-//        double errorY = hold_targetY - yPos;
-//
-//        double powerX = Range.clip(hold_kP * errorX, -hold_maxPower, hold_maxPower);
-//        double powerY = Range.clip(hold_kP * errorY, -hold_maxPower, hold_maxPower);
-//
-//        frontLeftDrive.setPower(powerY + powerX);
-//        backLeftDrive.setPower(powerY - powerX);
-//        frontRightDrive.setPower(powerY - powerX);
-//        backRightDrive.setPower(powerY + powerX);
-//    }
+    private void applyWheelBrake(DcMotor motor, int target) {
+        int error = target - motor.getCurrentPosition();
+        error = Math.max(-maxError, Math.min(maxError, error));
+        double power = kP * error;
+        power = Math.max(-maxPower, Math.min(maxPower, power));
+        motor.setPower(power);
+    }
+
 
     private void handleIntake() {
         if (gamepad2.left_bumper && !intakeActive) {
@@ -342,6 +444,7 @@ public class CPplsCook extends LinearOpMode {
         TelemetryPacket packet = new TelemetryPacket();
         Canvas canvas = packet.fieldOverlay();
 
+        // --- Draw field grid ---
         canvas.setStroke("#404040");
         for (int i = -72; i <= 72; i += 24) {
             canvas.strokeLine(i, -72, i, 72);
@@ -351,15 +454,18 @@ public class CPplsCook extends LinearOpMode {
         canvas.setStroke("#FFFFFF");
         canvas.strokeRect(-72, -72, 144, 144);
 
+        // Origin marker
         canvas.setStroke("#FFFF00");
         canvas.strokeLine(-10, 0, 10, 0);
         canvas.strokeLine(0, -10, 0, 10);
 
+        // Robot rectangle
         double robotSize = 18;
         canvas.setStroke("#3FBAFF");
         canvas.setFill("#3FBAFF");
         canvas.fillRect(xPos - robotSize / 2, yPos - robotSize / 2, robotSize, robotSize);
 
+        // Heading indicator
         double headingLineLength = 12;
         double headingX = xPos + headingLineLength * Math.cos(heading);
         double headingY = yPos + headingLineLength * Math.sin(heading);
@@ -367,9 +473,11 @@ public class CPplsCook extends LinearOpMode {
         canvas.setStrokeWidth(3);
         canvas.strokeLine(xPos, yPos, headingX, headingY);
 
+        // Center point
         canvas.setStroke("#00FF00");
         canvas.fillCircle(xPos, yPos, 3);
 
+        // Telemetry values
         packet.put("Wheel Brake Active", wheelBreak);
         packet.put("Intake Active", intakeActive);
         packet.put("Shooter Active", shooterActive);
@@ -377,14 +485,41 @@ public class CPplsCook extends LinearOpMode {
         packet.put("Robot X (in)", xPos);
         packet.put("Robot Y (in)", yPos);
         packet.put("Heading (rad)", heading);
+
         packet.put("Heading (deg)", Math.toDegrees(heading));
+        packet.put("Front Left Encoder", frontLeftDrive.getCurrentPosition());
+        packet.put("Front Right Encoder", frontRightDrive.getCurrentPosition());
+        packet.put("Back Left Encoder", backLeftDrive.getCurrentPosition());
+        packet.put("Back Right Encoder", backRightDrive.getCurrentPosition());
         packet.put("Odo Left Raw", -intake.getCurrentPosition());
         packet.put("Odo Right Raw", intake2.getCurrentPosition());
         packet.put("Odo Back Raw", shooter.getCurrentPosition());
         packet.put("Nerf Speed", 0.5);
         packet.put("Slow Mode", slow_mode);
         packet.put("Battery Voltage (V)", batteryVoltage);
+        packet.put("GE", true);
 
         dashboard.sendTelemetryPacket(packet);
+
+        telemetry.addData("Wheel Brake Active", wheelBreak);
+        telemetry.addData("Intake Active", intakeActive);
+        telemetry.addData("Shooter Active", shooterActive);
+        telemetry.addData("Shooter Hinge Position", shooterHinge.getPosition());
+        telemetry.addData("Robot X (in)", xPos);
+        telemetry.addData("Robot Y (in)", yPos);
+        telemetry.addData("Heading (rad)", heading);
+
+        telemetry.addData("Heading (deg)", Math.toDegrees(heading));
+        telemetry.addData("Front Left Encoder", frontLeftDrive.getCurrentPosition());
+        telemetry.addData("Front Right Encoder", frontRightDrive.getCurrentPosition());
+        telemetry.addData("Back Left Encoder", backLeftDrive.getCurrentPosition());
+        telemetry.addData("Back Right Encoder", backRightDrive.getCurrentPosition());
+        telemetry.addData("Odo Left Raw", -intake.getCurrentPosition());
+        telemetry.addData("Odo Right Raw", intake2.getCurrentPosition());
+        telemetry.addData("Odo Back Raw", shooter.getCurrentPosition());
+        telemetry.addData("Nerf Speed", 0.5);
+        telemetry.addData("Slow Mode", slow_mode);
+        telemetry.addData("Battery Voltage (V)", batteryVoltage);
+        telemetry.addData("GE", true);
     }
 }
