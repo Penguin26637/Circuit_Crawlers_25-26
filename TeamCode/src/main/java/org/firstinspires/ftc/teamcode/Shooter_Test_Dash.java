@@ -25,12 +25,12 @@ public class Shooter_Test_Dash extends OpMode {
     // ============= Controller Gains (Tune These) ============
     // kV: At 1400 RPM, we want ~95% power (leaving 5% for PID correction)
     // Calculation: kV = 0.95 / 1400 = 0.000678
-    public static double kV = 0.95 / MAX_RPM_UNDER_LOAD;
-    public static double kS = 0.05;  // Static friction baseline
+    public static double kV = 0.0006785714285714286;
+    public static double kS = 0.06;  // Static friction baseline
 
     // PID gains - these should work well now that feedforward is correct
-    public static double kP = 0.0005;  // Proportional gain
-    public static double kI = 0.0001;  // Integral gain
+    public static double kP = 0.0004;  // Proportional gain
+    public static double kI = 0.0002;  // Integral gain
     public static double kD = 0.00005; // Derivative gain
 
     // Anti-windup limit for integral term
@@ -44,7 +44,7 @@ public class Shooter_Test_Dash extends OpMode {
     private double lastError = 0.0;
 
     // Target flywheel speed in RPM
-    public static double targetRPM = 1400.0;  // Start at max for testing
+    public static double targetRPM = 980.0;  // Start at max for testing
 
     // Dashboard
     private FtcDashboard dashboard;
