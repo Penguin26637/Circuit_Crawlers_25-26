@@ -20,8 +20,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@Autonomous(name = "CP_PLEASE", group = "Autonomous")
-public class CP_PLEASE extends LinearOpMode {
+public class CPU_PLEASE extends LinearOpMode {
 //    public class Lift {
 //        private DcMotorEx lift;
 //
